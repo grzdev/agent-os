@@ -92,7 +92,7 @@ def build_srt(
     return "\n".join(lines).rstrip() + "\n"
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--script", default="",
@@ -110,7 +110,7 @@ def main() -> int:
              "skip past a cover/intro clip that precedes SHOT_1 in the "
              "merged video. Default 0 (no shift).",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.script:
         try:
@@ -123,7 +123,11 @@ def main() -> int:
         # sys.stdin defaults to the Windows console code page (cp936/
         # GBK), which mangles UTF-8 CJK input into surrogates that the
         # SRT writer then refuses to encode.
-        text = sys.stdin.buffer.read().decode("utf-8", errors="replace")
+        stdin_buf = getattr(sys.stdin, "buffer", None)
+        if stdin_buf is not None:
+            text = stdin_buf.read().decode("utf-8", errors="replace")
+        else:
+            text = sys.stdin.read()
     if not text.strip():
         print("Error: empty script input.", file=sys.stderr)
         return 1
@@ -143,8 +147,12 @@ def main() -> int:
         leading_offset_ms=max(0, args.leading_offset_ms),
     )
     out_path = Path(args.output).resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(srt, encoding="utf-8")
+    try:
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(srt, encoding="utf-8")
+    except OSError as exc:
+        print(f"Error: cannot write --output {args.output!r}: {exc}", file=sys.stderr)
+        return 1
     print(str(out_path))
     return 0
 
