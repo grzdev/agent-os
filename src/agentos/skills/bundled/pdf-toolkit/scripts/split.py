@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
+from pypdf.errors import PdfReadError
 
 
 def split_ranges(spec: str) -> list[list[int]]:
@@ -87,7 +88,11 @@ def main() -> int:
     if not args.input.is_file():
         print(f"error: input {args.input} not found", file=sys.stderr)
         return 2
-    result = split(args.input, args.pages, args.out)
+    try:
+        result = split(args.input, args.pages, args.out)
+    except (PdfReadError, OSError) as exc:
+        print(f"error: cannot read {args.input}: {exc}", file=sys.stderr)
+        return 2
     if not result.parts:
         print(
             f"error: no page in {args.pages!r} exists in {args.input} ({result.total_pages} pages)",

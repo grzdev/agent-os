@@ -199,3 +199,50 @@ def test_tables_strategy_explicit_is_rejected_with_a_clear_message(
         extract.main()
     assert exc_info.value.code == 2
     assert "invalid choice: 'explicit'" in capsys.readouterr().err
+
+
+def _merge_module():
+    sys.path.insert(0, str(SCRIPTS))
+    try:
+        import merge  # type: ignore[import-not-found]
+    finally:
+        sys.path.pop(0)
+    return merge
+
+
+def test_merge_skips_unreadable_pdf_with_warning(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    merge = _merge_module()
+    a = tmp_path / "valid.pdf"
+    _make_one_page_pdf(a, "VALID")
+    bad = tmp_path / "corrupt.pdf"
+    bad.write_bytes(b"corrupt non-pdf bytes")
+
+    combined = tmp_path / "combined.pdf"
+    written = merge.merge([{"file": str(bad)}, {"file": str(a)}], combined)
+    assert written == 1
+    assert combined.exists()
+
+    err = capsys.readouterr().err
+    assert "warn: cannot read" in err
+    assert "corrupt.pdf" in err
+
+
+def test_merge_main_reports_invalid_manifest_on_stderr(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    merge = _merge_module()
+    bad_manifest = tmp_path / "bad.json"
+    bad_manifest.write_text("{not valid json", encoding="utf-8")
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["merge.py", str(bad_manifest), "--out", str(tmp_path / "out.pdf")],
+    )
+    assert merge.main() == 2
+
+    err = capsys.readouterr().err
+    assert "error: cannot read manifest" in err
+

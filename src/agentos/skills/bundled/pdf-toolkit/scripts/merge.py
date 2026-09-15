@@ -18,6 +18,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 from pypdf import PdfReader, PdfWriter
+from pypdf.errors import PdfReadError
 
 
 def parse_ranges(spec: str | None, total: int) -> list[int]:
@@ -47,7 +48,11 @@ def merge(items: Iterable[dict[str, str]], out: Path) -> int:
         if not path.is_file():
             print(f"warn: missing {path}", file=sys.stderr)
             continue
-        reader = PdfReader(str(path))
+        try:
+            reader = PdfReader(str(path))
+        except (PdfReadError, OSError) as exc:
+            print(f"warn: cannot read {path}: {exc}", file=sys.stderr)
+            continue
         total = len(reader.pages)
         for page_num in parse_ranges(item.get("pages"), total):
             writer.add_page(reader.pages[page_num - 1])
@@ -77,7 +82,12 @@ def main() -> int:
         if not manifest_path.is_file():
             print(f"error: manifest {manifest_path} not found", file=sys.stderr)
             return 2
-        items = json.loads(manifest_path.read_text(encoding="utf-8"))
+        try:
+            raw_text = manifest_path.read_text(encoding="utf-8")
+            items = json.loads(raw_text)
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"error: cannot read manifest {manifest_path}: {exc}", file=sys.stderr)
+            return 2
         if not isinstance(items, list):
             print("error: manifest must be a JSON array", file=sys.stderr)
             return 2

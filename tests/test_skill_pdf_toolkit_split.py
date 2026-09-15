@@ -150,3 +150,27 @@ def test_main_stays_quiet_on_stderr_when_nothing_was_dropped(
     summary = json.loads(captured.out)
     assert summary["count"] == 2
     assert summary["skipped_pages"] == []
+
+
+def test_split_main_reports_unreadable_pdf_on_stderr(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    split = _split_module()
+    bad_pdf = tmp_path / "corrupt.pdf"
+    bad_pdf.write_bytes(b"not a valid pdf content")
+    out_dir = tmp_path / "out"
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["split.py", str(bad_pdf), "--pages", "1", "--out", str(out_dir)],
+    )
+
+    assert split.main() == 2
+
+    captured = capsys.readouterr()
+    assert "error: cannot read" in captured.err
+    assert not out_dir.exists()
+
