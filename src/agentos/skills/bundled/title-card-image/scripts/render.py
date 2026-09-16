@@ -62,6 +62,7 @@ def _parse_color(spec: str) -> tuple[int, int, int]:
 
 def _wrap_text(text: str, max_chars: int) -> list[str]:
     """Greedy line wrap that respects CJK (no spaces) and ASCII (whitespace)."""
+    max_chars = max(1, max_chars)
     if not text:
         return [""]
     # If text already has explicit newlines, honour them.
@@ -87,7 +88,7 @@ def _wrap_text(text: str, max_chars: int) -> list[str]:
     return [text[i:i + max_chars] for i in range(0, len(text), max_chars)]
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--text", required=True, help="Main headline text.")
     parser.add_argument("--output", "-o", required=True)
@@ -110,7 +111,15 @@ def main() -> int:
              "until it fits. Default yes.",
     )
     parser.add_argument("--font", default=None, help="Optional explicit font path.")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+
+    if args.max_chars_per_line <= 0:
+        print("Error: --max-chars-per-line must be greater than 0.", file=sys.stderr)
+        return 1
+
+    if args.width <= 0 or args.height <= 0:
+        print("Error: --width and --height must be greater than 0.", file=sys.stderr)
+        return 1
 
     try:
         from PIL import Image, ImageDraw  # type: ignore
