@@ -340,7 +340,7 @@ def _write_placeholder_png(out_path: Path, prompt: str, aspect_ratio: str) -> No
     img.save(out_path, "PNG")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prompt", "-p", required=True)
     parser.add_argument("--filename", "-f", required=True, help="Output filename (.png)")
@@ -357,7 +357,11 @@ def main() -> int:
         help="Repeatable. Each is tried ONCE after the primary model exhausts its retries.",
     )
     parser.add_argument(
-        "--placeholder-on-fail", default="no", choices=["yes", "no"],
+        "--placeholder-on-fail",
+        nargs="?",
+        const="yes",
+        default="no",
+        choices=["yes", "no"],
         help="When every model refuses, write a solid-colour placeholder PNG instead of exiting non-zero. Default no.",
     )
     parser.add_argument(
@@ -367,7 +371,7 @@ def main() -> int:
     parser.add_argument("--api-key", "-k")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
     parser.add_argument("--timeout", type=int, default=180)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     api_key = resolve_api_key(args.api_key)
     if not api_key:
