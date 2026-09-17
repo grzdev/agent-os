@@ -143,7 +143,7 @@ than reading a version out of `uv tool list` or `pip show`.
 | `configure x-search` | xAI X (Twitter) search: `--api-key-env`, `--x-search-model`, `--x-search-reasoning-effort`, `--no-x-search-enabled`; catalog via `onboard catalog x-search` |
 | `cost` | usage and estimated cost report; `savings` for the Pilot Router savings report (`--pdf`) |
 | `diagnostics` | `status`, `on`, `off` |
-| `migrate` | `openclaw`, `hermes` (`--source`, `--profile`, `--apply`, `--migrate-secrets`; dry-run without `--apply`) |
+| `migrate` | `openclaw`, `hermes` (`--source`, `--preset`, `--apply`, `--migrate-secrets`; dry-run without `--apply`) |
 | `agents` | `list`, `add`, `delete` (durable agents) |
 | `mcp-server` | `run` (MCP bridge) |
 | `replay`, `dist`, `onboard` | replay recorded turns / workspace inventory / setup status |
@@ -552,7 +552,8 @@ agentos cost savings           # what the Pilot Router saved, from the local dec
 # Baseline = the priciest model in [router.tiers], input tokens only, routing
 # mechanism only. Reads ~/.agentos/logs/decisions-*.jsonl; no gateway needed.
 agentos diagnostics on         # runtime diagnostics logging
-agentos migrate hermes --source <dir> [--apply]   # dry-run first, then --apply
+# Migration: dry-run preview by default; pass --apply to write changes
+agentos migrate [openclaw|hermes] [--source <dir>] [--apply] [--migrate-secrets] [--preset full|user-data]
 ```
 
 ## Gateway HTTP API

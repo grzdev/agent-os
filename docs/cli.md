@@ -981,6 +981,35 @@ Read:
 - [`diagnostics-and-replay.md`](diagnostics-and-replay.md)
 - [`configuration.md`](configuration.md)
 
+## Migration
+
+`agentos migrate` imports configuration, skills, memory, and credentials from external agent runtimes (`openclaw` and `hermes`). By default, it runs in **dry-run mode**, producing a preview report without modifying files; pass `--apply` to commit changes.
+
+```sh
+agentos migrate                                         # auto-detect and preview available sources
+agentos migrate --apply                                 # auto-detect and apply migration
+agentos migrate openclaw ~/.openclaw                    # preview OpenClaw migration
+agentos migrate openclaw ~/.openclaw --apply            # apply OpenClaw migration
+agentos migrate hermes ~/.hermes --apply                # apply Hermes migration
+agentos migrate --preset user-data --apply              # migrate user data only
+agentos migrate --migrate-secrets --apply               # copy recognized provider API keys
+agentos migrate --skill-conflict rename --apply         # resolve skill collisions by renaming
+agentos migrate --json                                  # machine-readable JSON report
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--apply` | Apply the migration. Without this flag, only a dry-run preview report is produced. |
+| `--source <sources>` | Comma-separated source IDs when auto-detecting (`openclaw`, `hermes`). |
+| `--preset <preset>` | Migration preset: `full` (default) or `user-data`. |
+| `--migrate-secrets` | Copy recognized secrets into AgentOS configuration (default: false). |
+| `--overwrite` | Overwrite existing workspace files after creating item-level backups. |
+| `--include <ids>` | Comma-separated migration item IDs to include. |
+| `--exclude <ids>` | Comma-separated migration item IDs to exclude. |
+| `--skill-conflict <mode>` | Skill conflict resolution: `skip` (default), `overwrite`, or `rename`. |
+| `--persona-conflict <mode>` | Persona conflict resolution (OpenClaw): `prompt` (default), `use-agentos`, `use-openclaw`, `merge`, or `skip`. |
+| `--json` | Emit machine-readable JSON migration report. |
+
 ## MCP Server Bridge
 
 ```sh
