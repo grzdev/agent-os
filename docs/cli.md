@@ -990,6 +990,20 @@ agentos mcp-server run --gateway ws://localhost:18792/ws
 
 Read: [`mcp-server.md`](mcp-server.md)
 
+## Workspace Inventory
+
+`agentos dist` emits `workspace-state.json`: a reproducible, versioned inventory of the current AgentOS install, capturing bundled channels, bundled tools, gateway safety defaults, package metadata, and Python requirements.
+
+```sh
+agentos dist                             # emit JSON inventory to stdout
+agentos dist --output workspace-state.json  # write to file and print resolved path
+agentos dist -o /tmp/inventory.json
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--output`, `-o` | Write the JSON inventory payload to this file path instead of stdout. |
+
 ---
 
 [Docs index](README.md) · [Product guide](../README.product.md) · [Improve this page](contributing-docs.md) · [Report a docs issue](https://github.com/use-agent-os/agent-os/issues/new?template=docs_report.yml)
