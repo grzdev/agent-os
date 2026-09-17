@@ -552,6 +552,16 @@ agentos cost savings           # what the Pilot Router saved, from the local dec
 # Baseline = the priciest model in [router.tiers], input tokens only, routing
 # mechanism only. Reads ~/.agentos/logs/decisions-*.jsonl; no gateway needed.
 agentos diagnostics on         # runtime diagnostics logging
+# Durable memory operations: backend status, indexing, search, ingestion, and curated memory
+agentos memory status [--deep] [--agent main]     # backend health, entry counts, retrieval health
+agentos memory index [--force]                    # sync or rebuild search index rows
+agentos memory list [--source memory|knowledge_base|sessions|all]
+agentos memory search "<query>" [--limit 10] [--source all]
+agentos memory ingest /path/to/docs [--recursive] # ingest folder into knowledge base
+agentos memory curated get [--target memory|user] # inspect MEMORY.md or USER.md entries
+agentos memory curated add "Important convention" # add entry to curated store
+agentos memory curated remove "Old convention"    # remove entry from curated store
+agentos memory raw-fallbacks list                 # inspect raw fallback captures
 agentos migrate hermes --source <dir> [--apply]   # dry-run first, then --apply
 ```
 
