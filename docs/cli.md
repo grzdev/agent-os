@@ -731,7 +731,9 @@ Read: [`sessions.md`](sessions.md)
 
 ```sh
 agentos memory status
+agentos memory status --deep
 agentos memory index
+agentos memory index --force
 agentos memory list --source all
 agentos memory ingest /path/to/docs
 agentos memory curated get --target memory
@@ -743,6 +745,16 @@ agentos memory embedding-download
 agentos memory raw-fallbacks list
 agentos memory raw-fallbacks show <path>
 ```
+
+| Option | Subcommand | Purpose |
+| --- | --- | --- |
+| `--deep` | `status` | Include detailed retrieval health diagnostics and source chunk verification. |
+| `--force` | `index` | Force a complete rebuild of memory search index rows and rescan sources. |
+| `--agent <id>` | all | Target a specific agent (defaults to `main`). |
+| `--source <name>` | `list`, `search` | Filter source: `memory`, `knowledge_base`, `sessions`, or `all`. |
+| `--limit <n>`, `-n` | `search` | Maximum search results to return (default: `10`). |
+| `--recursive / --no-recursive` | `ingest` | Recursively ingest directories into the knowledge base (default: recursive). |
+| `--json` | all | Emit machine-readable JSON. |
 
 Read: [`features/memory.md`](features/memory.md)
 
