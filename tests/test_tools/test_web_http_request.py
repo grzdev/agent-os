@@ -580,3 +580,23 @@ async def test_http_request_without_output_path_does_not_record_workspace_write(
         assert len(ctx.workspace_file_writes) == 0
     finally:
         current_tool_context.reset(token)
+
+
+@pytest.mark.asyncio
+async def test_http_request_handles_unknown_charset_encoding_gracefully(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_response(
+        monkeypatch,
+        httpx.Response(
+            200,
+            content=b"Hello from unknown charset",
+            headers={"content-type": "text/html; charset=unknown-charset-xyz"},
+            request=httpx.Request("GET", "https://example.test/page"),
+        ),
+    )
+
+    raw_result = await _original_http_request()(url="https://example.test/page")
+    payload = json.loads(raw_result)
+    assert payload["status"] == 200
+    assert "Hello from unknown charset" in payload["body"]

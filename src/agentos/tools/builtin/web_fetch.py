@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import codecs
 import json
 import os
 from typing import Any
@@ -65,6 +66,15 @@ _MAX_REDIRECTS = 5
 _WEB_FETCH_DOWNLOAD_LIMIT_BYTES = 1_048_576
 _WEB_FETCH_DOWNLOAD_LIMIT_ENV = "AGENTOS_WEB_FETCH_DOWNLOAD_LIMIT"
 _STREAM_CHUNK_BYTES = 65_536
+
+
+def _safe_encoding(encoding: str | None) -> str:
+    codec = encoding or "utf-8"
+    try:
+        codecs.lookup(codec)
+        return codec
+    except LookupError:
+        return "utf-8"
 
 
 def _check_ssrf(url: str) -> None:
@@ -294,7 +304,7 @@ async def web_fetch(
                 # those headers, and we have to honour the server's charset
                 # (e.g. text/plain; charset=iso-8859-1) instead of assuming
                 # UTF-8. Falling back to utf-8 matches httpx's own default.
-                response_encoding = response.encoding or "utf-8"
+                response_encoding = _safe_encoding(response.encoding)
                 total = 0
                 chunks: list[bytes] = []
                 truncated = False

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import codecs
 import hashlib
 import json
 import os
@@ -34,6 +35,15 @@ def _validate_http_url(url: str) -> None:
     # reachable — unlike web_fetch, http_request is the tool people point at a
     # local dev server on purpose.
     assert_not_metadata_endpoint(url)
+
+
+def _safe_encoding(encoding: str | None) -> str:
+    codec = encoding or "utf-8"
+    try:
+        codecs.lookup(codec)
+        return codec
+    except LookupError:
+        return "utf-8"
 
 
 _TEXT_BODY_LIMIT = 10_000
@@ -303,7 +313,7 @@ async def http_request(
             status_code = response.status_code
             response_url = str(response.url)
             response_headers = dict(response.headers)
-            response_encoding = response.encoding or "utf-8"
+            response_encoding = _safe_encoding(response.encoding)
             content_type = response_headers.get("content-type", "")
         finally:
             await response.aclose()

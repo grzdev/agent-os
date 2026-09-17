@@ -111,3 +111,12 @@ def test_resolve_effective_max_chars_run_budget_cap_still_applies_below_minimum(
         assert _resolve_effective_max_chars(999) == 50
     finally:
         current_tool_context.reset(token)
+
+
+def test_safe_encoding_handles_unknown_and_valid_encodings() -> None:
+    from agentos.tools.builtin.web_fetch import _safe_encoding
+
+    assert _safe_encoding("utf-8") == "utf-8"
+    assert _safe_encoding("iso-8859-1") == "iso-8859-1"
+    assert _safe_encoding("unknown-encoding-xyz") == "utf-8"
+    assert _safe_encoding(None) == "utf-8"
