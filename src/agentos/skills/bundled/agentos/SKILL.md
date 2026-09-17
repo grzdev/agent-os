@@ -539,6 +539,8 @@ agentos cron add --every 10m --job-kind agent_turn --script watch_rss.py \
 # host shell as the user. --no-elevated opts one job out of that, running it
 # read-only instead. See docs/cli.md before suggesting either.
 agentos cron add --every 6h --agent main --no-elevated --name "LP check" --text "..."
+agentos context                # measure fixed per-request context cost & tool profiles
+# agentos context [--top 5] [--json]
 agentos cost                   # usage + estimated spend
 # cost support filtering and grouping:
 # agentos cost [--by-model] [--json] [--csv]
