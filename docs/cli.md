@@ -383,10 +383,16 @@ Search:
 
 ```sh
 agentos search list
+agentos search status
+agentos search status duckduckgo --json
 agentos search configure duckduckgo
 agentos search query "latest AgentOS release"
 agentos configure search --search-provider duckduckgo
 ```
+
+`agentos search status` displays runtime diagnostics from the running gateway,
+showing whether the active provider is configured and buildable, fallback policies,
+and connection health. Pass an optional provider ID or `--json` for structured output.
 
 X (Twitter) search — a separate xAI-backed tool, not a `web_search` backend.
 With a SuperGrok / X Premium+ subscription, sign in instead of using a key:

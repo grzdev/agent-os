@@ -552,6 +552,9 @@ agentos cost savings           # what the Pilot Router saved, from the local dec
 # Baseline = the priciest model in [router.tiers], input tokens only, routing
 # mechanism only. Reads ~/.agentos/logs/decisions-*.jsonl; no gateway needed.
 agentos diagnostics on         # runtime diagnostics logging
+agentos search list            # list web search providers
+agentos search status          # check active search provider health
+agentos search query "..."     # test a search query from CLI
 agentos migrate hermes --source <dir> [--apply]   # dry-run first, then --apply
 ```
 
