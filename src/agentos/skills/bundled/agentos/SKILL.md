@@ -249,6 +249,15 @@ otherwise export them with `agentos channels native-commands slack --request-url
 
 ## Common operations (verified recipes)
 
+### Inspect or update configuration keys
+
+```sh
+agentos config get                                    # list all config keys and values
+agentos config get auth.mode                          # inspect a single key
+agentos config set auth.mode token                    # prints export command
+agentos config set auth.mode token --config agentos.toml # persist directly to config file
+```
+
 ### Change the model/provider (persistently)
 
 ```sh

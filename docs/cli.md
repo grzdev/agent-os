@@ -24,6 +24,7 @@ available without `uv tool list` or `pip show`.
 | `agentos onboard` | Run or inspect first-run setup. |
 | `agentos auth` | Provider logins that are not API keys (`login`/`status`/`logout`; xAI today). |
 | `agentos configure` | Reconfigure provider, router, channels, search, x-search, image generation, or memory embedding. |
+| `agentos config` | Inspect and set configuration values via dot-notation (`get`/`set`). |
 | `agentos gateway` | Run and manage the gateway server. |
 | `agentos chat` | Start interactive terminal chat. |
 | `agentos agent` | Run a single automation-friendly agent turn. |
@@ -359,6 +360,16 @@ The check is suppressed on non-interactive CLI runs (no TTY) and in CI. Control 
 See [`configuration.md`](configuration.md#update-notifications).
 
 ## Configuration Commands
+
+Direct configuration get and set (dot-notation):
+
+```sh
+agentos config get                       # table of all gateway config keys and values
+agentos config get auth.mode             # inspect single key
+agentos config get --config path/to/cfg  # inspect specific config file
+agentos config set auth.mode token       # prints export AGENTOS_GATEWAY_AUTH__MODE=token
+agentos config set auth.mode token --config path/to/cfg # persists to file with backup
+```
 
 Provider and router:
 
