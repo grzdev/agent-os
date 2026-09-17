@@ -366,8 +366,19 @@ agentos gateway restart
 ```
 
 Unauthenticated non-loopback Control is unsupported. A reverse proxy, VPN, or
-firewall does not replace the AgentOS Control token. Behind a reverse proxy on
-another browser origin, also set `control_ui.allowed_origins`.
+firewall does not replace the AgentOS Control token. Behind a reverse proxy on another browser origin, also set `control_ui.allowed_origins`.
+
+### Chat sessions
+
+```sh
+agentos sessions list                             # list recent sessions
+agentos sessions list --search "refactor" --json # filter and output JSON
+agentos sessions show <session-key>              # inspect details of a specific session
+agentos sessions rename <session-key> "project"  # assign human-readable name
+agentos sessions abort <session-key>             # abort a running session turn
+agentos sessions export <session-key> --format md -o transcript.md # export transcript
+agentos sessions delete <session-key> --yes      # delete session without confirmation prompt
+```
 
 ### Skills
 

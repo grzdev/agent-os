@@ -659,14 +659,15 @@ Read:
 ```sh
 agentos sessions list
 agentos sessions list --search api-refactor    # match name, key, subject or model
-agentos sessions list --agent main --status done   # also --channel, --since
+agentos sessions list --agent main --status done   # also --channel, --since, --json
 agentos sessions show <session-key>
 agentos sessions rename <session-key> "api-refactor"
 agentos sessions rename <session-key> --clear  # drop the custom name
-agentos sessions resume <session-key>
-agentos sessions abort <session-key>
-agentos sessions export <session-key>
-agentos sessions delete <session-key>
+agentos sessions resume <session-key>          # resume session in interactive terminal chat
+agentos sessions abort <session-key>           # abort active running turn in gateway
+agentos sessions export <session-key> --format md -o transcript.md
+agentos sessions export <session-key> --format json -o session.json
+agentos sessions delete <session-key> --yes    # delete session without confirmation prompt
 ```
 
 Every filter on `sessions list` runs client-side over the recent history rather
