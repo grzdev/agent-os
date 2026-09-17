@@ -229,3 +229,14 @@ async def test_session_search_project_scope_outside_project_notes(manager, stora
         current_tool_context.reset(token)
     assert data["results"] == []
     assert "not in a project" in data["note"]
+
+
+@pytest.mark.asyncio
+async def test_session_search_rejects_invalid_scope(manager, storage):
+    registry = ToolRegistry()
+    create_session_search_tool(storage, registry=registry)
+    search = registry.get("session_search").handler
+
+    with pytest.raises(ToolError, match="Invalid scope 'workspace'"):
+        await search(query="anything", scope="workspace")
+

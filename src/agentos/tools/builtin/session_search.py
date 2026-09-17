@@ -84,6 +84,9 @@ def create_session_search_tool(
         if not query.strip():
             raise ToolError("Query must not be empty")
 
+        if scope not in ("all", "project"):
+            raise ToolError(f"Invalid scope '{scope}'. Allowed scopes: 'all', 'project'")
+
         limit = max(1, min(50, limit))
 
         project_id: str | None = None
