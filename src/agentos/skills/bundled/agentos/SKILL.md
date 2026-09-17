@@ -294,10 +294,12 @@ and each check costs a turn.
 ```sh
 agentos auth login xai --resume --json 2>/dev/null    # exit 0 done, 3 not yet, 1 failed/expired
 agentos auth status --json 2>/dev/null                # confirm; never prints a token
+agentos auth logout xai                               # clear stored xAI session and tokens
 ```
 
 Exit 3 means keep waiting, not an error. On exit 1 the code expired — start
-over. The user code and link are safe to show in chat; neither works without
+over. `agentos auth logout` removes stored credentials from disk when resetting.
+The user code and link are safe to show in chat; neither works without
 the user's own xAI session, and no token ever reaches the conversation.
 
 ### Gateway lifecycle
