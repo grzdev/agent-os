@@ -380,6 +380,7 @@ agentos skills install <bankr-skill-url> -s bankr # from Bankr (repo or bankr.bo
 agentos skills install <aeon-skill-url> -s aeon   # from Aeon (aeonfun/aeon skills/<slug>)
 agentos skills tap add owner/repo      # register a GitHub repo as a skill source
 agentos skills tap list
+agentos skills tap remove owner/repo   # unregister a tap
 agentos skills update
 agentos skills uninstall <name>
 ```

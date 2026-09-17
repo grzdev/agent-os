@@ -593,6 +593,9 @@ agentos skills view pdf-toolkit
 agentos skills install <skill-name>
 agentos skills install <skill-url> --source bankr
 agentos skills install <skill-url> --source aeon
+agentos skills tap add <owner/repo>       # register a GitHub repo as a skill tap
+agentos skills tap list                  # list registered taps
+agentos skills tap remove <owner/repo>    # remove a registered tap
 agentos skills update --all
 agentos skills uninstall <skill-name>
 ```
