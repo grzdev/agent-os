@@ -55,3 +55,20 @@ def test_help_flag_prints_usage_and_exits_0(flag: str) -> None:
     assert "Usage:" in result.stdout
     assert "<token_address>" in result.stdout
     assert "Traceback" not in result.stderr
+
+
+def test_analyze_script_reconfigures_stdout_encoding() -> None:
+    """The script must safely reconfigure stdout/stderr on restrictive encodings."""
+    import os
+
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "ascii"
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "-h"],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0
+    assert "Usage:" in result.stdout
+
