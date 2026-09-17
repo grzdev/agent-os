@@ -703,8 +703,17 @@ agentos projects create "Token research" --knowledge-file notes.md
 agentos projects show <project-id>
 agentos projects update <project-id> --name "New name" --knowledge-file notes.md
 agentos projects move <session-key> <project-id>   # 'none' detaches
-agentos projects delete <project-id>               # sessions survive, detached
+agentos projects delete <project-id> --yes        # -y skips confirmation
 ```
+
+| Option | Subcommand | Purpose |
+| --- | --- | --- |
+| `--agent <id>` | `list`, `create` | Filter by default agent on `list`; set default agent for new chats on `create` (default: `main`). |
+| `--knowledge <text>` | `create`, `update` | Shared knowledge string injected into member sessions. |
+| `--knowledge-file <path>` | `create`, `update` | Read shared knowledge text from a file. |
+| `--name <name>` | `update` | New project name. |
+| `--yes`, `-y` | `delete` | Skip confirmation prompt when deleting a project. |
+| `--json` | all | Emit machine-readable JSON output. |
 
 A project groups chat sessions across agents and carries a free-form
 **knowledge** text (capped at 24,000 characters — the same ceiling the

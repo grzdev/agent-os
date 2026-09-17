@@ -502,9 +502,12 @@ agentos sessions list --search api-refactor
 # the agent is running in — use it when the user just asks in prose.
 # Group related sessions into a project; its knowledge text is injected into
 # every member session. Delete keeps the sessions (they just detach).
-agentos projects create "Token research" --knowledge-file notes.md
+agentos projects list [--agent main] [--json]
+agentos projects create "Token research" --knowledge-file notes.md [--agent main]
+agentos projects show <project-id> [--json]
+agentos projects update <project-id> --name "New name"
 agentos projects move <session-id> <project-id>   # 'none' detaches
-agentos projects show <project-id>
+agentos projects delete <project-id> --yes        # -y skips confirmation
 agentos cron list / add / run <id> / runs
 # --job-kind decides what fires. Default 'auto' = reminder: --text is delivered
 # verbatim and NO LLM runs, so a job that should think needs agent_turn.
