@@ -971,6 +971,22 @@ tier is dearer than both.
 Turns are logged only when the decision log is being written, so the window
 starts at your oldest retained `decisions-*.jsonl` file.
 
+### `agentos replay`
+
+Replays a recorded turn from the decision log without re-executing tools:
+
+```sh
+agentos replay --session <session-key> --turn <turn-id>
+agentos replay -s <session-key> -t <turn-id>
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--session`, `-s` | Session key to inspect (required). |
+| `--turn`, `-t` | Turn ID to replay (required). |
+
+Exit codes: `0` on success, `1` if no entry is found for the given session and turn.
+
 Use diagnostics and replay when you need to understand why a turn behaved a
 certain way. For Prometheus metrics (`/metrics`), OTLP trace export, and log retention
 settings under `[observability]`, see [`configuration.md`](configuration.md#observability).
