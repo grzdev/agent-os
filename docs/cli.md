@@ -741,9 +741,13 @@ agentos agents delete research
 agentos cron list
 agentos cron add --every 1h --text "Summarize important updates" --name hourly-summary
 agentos cron status <job-id>
+agentos cron run <job-id>
 agentos cron runs <job-id>
 agentos cron output <job-id>
+agentos cron remove <job-id>
 ```
+
+`agentos cron run <job-id>` triggers an immediate run of a scheduled job without waiting for its next interval. `agentos cron remove <job-id>` deletes a scheduled job; pass `-y` / `--yes` to skip confirmation.
 
 `--job-kind` picks what fires: `reminder` (delivers `--text` verbatim, no LLM),
 `script` (runs a file, no LLM), `agent_turn` (the agent runs `--text` as a

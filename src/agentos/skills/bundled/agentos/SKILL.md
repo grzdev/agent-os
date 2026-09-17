@@ -505,7 +505,7 @@ agentos sessions list --search api-refactor
 agentos projects create "Token research" --knowledge-file notes.md
 agentos projects move <session-id> <project-id>   # 'none' detaches
 agentos projects show <project-id>
-agentos cron list / add / run <id> / runs
+agentos cron list / add / run <id> / runs / remove <id>
 # --job-kind decides what fires. Default 'auto' = reminder: --text is delivered
 # verbatim and NO LLM runs, so a job that should think needs agent_turn.
 agentos cron add --every 1h --job-kind agent_turn --text "Summarize updates"
