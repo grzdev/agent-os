@@ -249,6 +249,18 @@ otherwise export them with `agentos channels native-commands slack --request-url
 
 ## Common operations (verified recipes)
 
+### Manage environment variables and credentials
+
+```sh
+agentos env list                                # list all variables AgentOS knows about
+agentos env list --missing                      # only unset variables
+agentos env get OPENAI_API_KEY                  # view variable state and description (masked)
+agentos env get OPENAI_API_KEY --reveal -y      # reveal value
+agentos env set OPENAI_API_KEY --stdin          # set credential safely via stdin
+agentos env import GITHUB_TOKEN                 # copy credential from another local CLI tool
+agentos env unset OPENAI_API_KEY -y             # remove variable from ~/.agentos/.env
+```
+
 ### Change the model/provider (persistently)
 
 ```sh

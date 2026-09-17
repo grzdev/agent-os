@@ -23,6 +23,7 @@ available without `uv tool list` or `pip show`.
 | `agentos doctor` | Diagnose readiness and print recovery steps. |
 | `agentos onboard` | Run or inspect first-run setup. |
 | `agentos auth` | Provider logins that are not API keys (`login`/`status`/`logout`; xAI today). |
+| `agentos env` | Environment variables — list, get, set, import, and unset credentials in `~/.agentos/.env`. |
 | `agentos configure` | Reconfigure provider, router, channels, search, x-search, image generation, or memory embedding. |
 | `agentos gateway` | Run and manage the gateway server. |
 | `agentos chat` | Start interactive terminal chat. |
@@ -527,7 +528,7 @@ agentos env get OPENAI_API_KEY         # state and description, value masked
 agentos env get OPENAI_API_KEY --reveal
 agentos env set OPENAI_API_KEY --stdin # value read from stdin
 agentos env import GITHUB_TOKEN         # copy from a tool that already has it
-agentos env unset OPENAI_API_KEY
+agentos env unset OPENAI_API_KEY        # prompt confirmation (-y / --yes to skip)
 ```
 
 `agentos env import` covers the case where the credential is not really
