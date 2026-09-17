@@ -35,6 +35,21 @@ async def test_logs_tail_missing_file_returns_empty_payload(tmp_path, monkeypatc
 
 
 @pytest.mark.asyncio
+async def test_logs_tail_coerces_string_limit_and_cursor_safely(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("AGENTOS_LOG_DIR", str(tmp_path))
+    log_file = tmp_path / "debug.log"
+    log_file.write_text(
+        "line 1\nline 2\nline 3\n",
+        encoding="utf-8",
+    )
+
+    result = await _handle_logs_tail({"limit": "2", "cursor": "0"}, None)  # type: ignore[arg-type]
+
+    assert len(result["lines"]) == 2
+    assert result["cursor"] == log_file.stat().st_size
+
+
+@pytest.mark.asyncio
 async def test_logs_status_reports_raw_capture_disabled_by_default(monkeypatch) -> None:
     monkeypatch.delenv("AGENTOS_TURN_CALL_LOG", raising=False)
     monkeypatch.delenv("AGENTOS_TURN_CALL_LOG_DIR", raising=False)
