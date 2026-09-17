@@ -48,6 +48,29 @@ available without `uv tool list` or `pip show`.
 | `agentos dist` | Emit a reproducible workspace-state inventory. |
 | `agentos reset` | Reset a session, rotating it to a fresh transcript. |
 
+## Readiness Doctor
+
+`agentos doctor` inspects local configuration, provider credentials, gateway connectivity, and memory subsystem health, reporting actionable recovery steps when issues are found.
+
+```sh
+agentos doctor                          # full readiness check with deep memory diagnostics
+agentos doctor --quick                  # shallow check, skipping slow memory probes
+agentos doctor --agent main             # target a specific durable agent
+agentos doctor --config /path/to/config.toml  # offline diagnostic when gateway is stopped
+agentos doctor --gateway http://localhost:18791
+agentos doctor --json                   # machine-readable health report
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--deep / --quick` | Include deep memory diagnostics (`--deep`, default) or fast shallow checks (`--quick`). |
+| `--agent <id>` | Target a specific durable agent for memory checks (default: `main`). |
+| `--config <path>` | Config path to inspect offline when the local gateway is unavailable. |
+| `--gateway <url>` | Target gateway URL (defaults to `AGENTOS_GATEWAY_URL` or `http://localhost:18791`). |
+| `--json` | Emit machine-readable JSON health report. |
+
+Exit codes: `0` when ready, `1` when one or more blocking issues are detected.
+
 ## Run Surfaces
 
 Web UI and gateway:

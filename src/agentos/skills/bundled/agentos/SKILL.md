@@ -54,7 +54,7 @@ Rules that prevent broken commands:
 
 ```sh
 agentos onboard              # first-run setup wizard (or: agentos init, agentos configure)
-agentos doctor               # diagnose readiness, print recovery steps
+agentos doctor [--quick] [--json] # diagnose readiness (--deep by default; --quick skips slow memory checks)
 agentos gateway run          # gateway + Web UI, foreground (default port 18791)
 agentos chat                 # interactive terminal chat
 agentos agent -m "..."       # one-shot, automation-friendly agent turn
@@ -146,7 +146,7 @@ than reading a version out of `uv tool list` or `pip show`.
 | `migrate` | `openclaw`, `hermes` (`--source`, `--profile`, `--apply`, `--migrate-secrets`; dry-run without `--apply`) |
 | `agents` | `list`, `add`, `delete` (durable agents) |
 | `mcp-server` | `run` (MCP bridge) |
-| `replay`, `dist`, `onboard` | replay recorded turns / workspace inventory / setup status |
+| `replay`, `dist`, `onboard`, `doctor` | replay recorded turns / workspace inventory / setup status / readiness diagnostics |
 
 Built-in channel types are `discord`, `email`, `slack`, and `telegram`; use
 `agentos channels types` as the authoritative catalog. Config migration backs up the
