@@ -146,6 +146,7 @@ than reading a version out of `uv tool list` or `pip show`.
 | `migrate` | `openclaw`, `hermes` (`--source`, `--profile`, `--apply`, `--migrate-secrets`; dry-run without `--apply`) |
 | `agents` | `list`, `add`, `delete` (durable agents) |
 | `mcp-server` | `run` (MCP bridge) |
+| `reset` | `reset --key <id>` — rotate session to a fresh transcript via the gateway |
 | `replay`, `dist`, `onboard` | replay recorded turns / workspace inventory / setup status |
 
 Built-in channel types are `discord`, `email`, `slack`, and `telegram`; use
@@ -500,6 +501,8 @@ agentos sessions rename <id> "api-refactor"   # --clear drops the name
 agentos sessions list --search api-refactor
 # In chat, /rename does the same. The `session_rename` tool names the session
 # the agent is running in — use it when the user just asks in prose.
+# Reset a session to a fresh transcript while preserving history
+agentos reset --key <session-key>
 # Group related sessions into a project; its knowledge text is injected into
 # every member session. Delete keeps the sessions (they just detach).
 agentos projects create "Token research" --knowledge-file notes.md

@@ -694,6 +694,22 @@ chat, `/rename <name>` does the same for the session you are in (no name
 clears it). Names are trimmed, collapsed to one line, and capped at 120
 characters.
 
+### Resetting a session
+
+`agentos reset` rotates a session key to a fresh transcript via the gateway:
+
+```sh
+agentos reset --key <session-key>
+agentos reset --key <session-key> --gateway http://localhost:18791
+```
+
+| Option | Purpose |
+| --- | --- |
+| `--key` | Session key to reset (required). |
+| `--gateway` | Gateway HTTP/WebSocket URL (defaults to `AGENTOS_GATEWAY_URL` or `http://localhost:18791`). |
+
+Exit codes: `0` on success, `1` when the gateway refuses the reset (session preserved).
+
 ## Projects
 
 ```sh
