@@ -166,8 +166,8 @@ Interactivity, and slash-command Request URLs to match, then restart the gateway
 Duplicate webhook paths with overlapping HTTP methods cause a startup error.
 
 Telegram direct messages always require pairing. Use `agentos channels pairing
-list <name>`, `approve <name> <code>`, `deny <name> <sender-id>`, or `revoke
-<name> <sender-id>`. Pairing is binary and has no admin/owner tier. Telegram
+list <name>`, `approve <name> <code>`, `deny <name> <sender-id>`, `revoke
+<name> <sender-id>`, or `clear-pending <name>`. Pairing is binary and has no admin/owner tier. Telegram
 groups are disabled by default; enable them only with explicit
 `group_chat_ids`, paired senders, and the desired mention requirement.
 

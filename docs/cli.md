@@ -445,11 +445,16 @@ agentos channels pairing list personal
 agentos channels pairing approve personal ABCD2345
 agentos channels pairing deny personal <telegram-user-id>
 agentos channels pairing revoke personal <telegram-user-id>
+agentos channels pairing clear-pending personal
 agentos channels enable personal
 agentos channels disable personal
+agentos channels edit personal
 agentos channels restart personal
+agentos channels logout personal
 agentos channels remove personal
 ```
+
+`agentos channels edit <name>` updates settings on an existing channel entry. `agentos channels logout <name>` clears stored session or authentication tokens for an adapter. `agentos channels pairing clear-pending <name>` dismisses all outstanding unapproved pairing requests.
 
 `native-commands` prints the native platform payload derived from the same
 channel command registry used for text `/command` dispatch. Telegram and
