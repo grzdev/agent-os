@@ -735,9 +735,11 @@ Read: [`features/memory.md`](features/memory.md)
 ## Durable Agents and Scheduling
 
 ```sh
-agentos agents list
-agentos agents add research --name Research --workspace /path/to/research
-agentos agents delete research
+agentos agents list                    # list configured agents
+agentos agents list --json             # machine-readable JSON
+agentos agents add research --name "Research" --workspace /path/to/research \
+  --model anthropic/claude-sonnet-4 --description "Deep research agent"
+agentos agents delete research --force # delete from config without confirmation prompt
 agentos cron list
 agentos cron add --every 1h --text "Summarize important updates" --name hourly-summary
 agentos cron status <job-id>

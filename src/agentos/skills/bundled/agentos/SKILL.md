@@ -505,6 +505,10 @@ agentos sessions list --search api-refactor
 agentos projects create "Token research" --knowledge-file notes.md
 agentos projects move <session-id> <project-id>   # 'none' detaches
 agentos projects show <project-id>
+# Manage durable configured agents:
+agentos agents list
+agentos agents add research --name "Research" --workspace /path/to/research
+agentos agents delete research --force
 agentos cron list / add / run <id> / runs
 # --job-kind decides what fires. Default 'auto' = reminder: --text is delivered
 # verbatim and NO LLM runs, so a job that should think needs agent_turn.
