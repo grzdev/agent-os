@@ -82,6 +82,28 @@ describe('filterVars', () => {
     expect(filterVars(rows, 'all', 'my_own').map((r) => r.name)).toEqual(['MY_OWN'])
     expect(filterVars(rows, 'all', 'set_one').map((r) => r.name)).toEqual(['SET_ONE', 'UNSET_ONE'])
   })
+
+  it('safely handles rows with nullish description, owner, or category', () => {
+    const looseRows = [
+      row({
+        name: 'CUSTOM_VAR',
+        description: undefined as unknown as string,
+        owner: undefined as unknown as string,
+        category: undefined as unknown as string,
+      }),
+      row({
+        name: 'NULL_VAR',
+        description: null as unknown as string,
+        owner: null as unknown as string,
+      }),
+    ]
+    expect(() => filterVars(looseRows, 'all', 'custom')).not.toThrow()
+    expect(filterVars(looseRows, 'all', 'custom').map((r) => r.name)).toEqual(['CUSTOM_VAR'])
+    expect(filterVars(looseRows, 'custom', '').map((r) => r.name)).toEqual([
+      'CUSTOM_VAR',
+      'NULL_VAR',
+    ])
+  })
 })
 
 describe('groupByCategory', () => {
@@ -92,6 +114,14 @@ describe('groupByCategory', () => {
       row({ name: 'P', category: 'provider' }),
     ])
     expect(groups.map((g) => g.category)).toEqual(['provider', 'skill', 'custom'])
+  })
+
+  it('defaults missing or nullish category to custom', () => {
+    const groups = groupByCategory([
+      row({ name: 'CUSTOM_ROW', category: undefined as unknown as string }),
+    ])
+    expect(groups.map((g) => g.category)).toEqual(['custom'])
+    expect(groups[0]!.rows[0]!.name).toBe('CUSTOM_ROW')
   })
 
   it('labels groups for humans and counts what is set', () => {

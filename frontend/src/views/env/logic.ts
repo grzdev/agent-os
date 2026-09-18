@@ -27,14 +27,14 @@ export interface EnvVarRow {
   /** Masked for secrets, the real setting for non-secrets, null when unset. */
   masked: string | null
   secret: boolean
-  description: string
-  url: string
-  category: string
-  owner: string
-  required: boolean
-  writable: boolean
-  restartRequired: boolean
-  missing: boolean
+  description?: string | null
+  url?: string | null
+  category?: string | null
+  owner?: string | null
+  required?: boolean
+  writable?: boolean
+  restartRequired?: boolean
+  missing?: boolean
   /** Set only when the variable is unset and a source can supply it. */
   availableFrom?: EnvSourceOffer | null
 }
@@ -96,13 +96,13 @@ export function filterVars(rows: EnvVarRow[], filter: EnvFilter, query: string):
   return rows.filter((row) => {
     if (filter === 'missing' && row.isSet) return false
     if (filter === 'set' && !row.isSet) return false
-    if (filter === 'custom' && row.category !== 'custom') return false
+    const category = row.category || 'custom'
+    if (filter === 'custom' && category !== 'custom') return false
     if (!needle) return true
-    return (
-      row.name.toLowerCase().includes(needle) ||
-      row.description.toLowerCase().includes(needle) ||
-      row.owner.toLowerCase().includes(needle)
-    )
+    const name = (row.name || '').toLowerCase()
+    const description = (row.description || '').toLowerCase()
+    const owner = (row.owner || '').toLowerCase()
+    return name.includes(needle) || description.includes(needle) || owner.includes(needle)
   })
 }
 
@@ -116,9 +116,10 @@ export interface EnvGroup {
 export function groupByCategory(rows: EnvVarRow[]): EnvGroup[] {
   const buckets = new Map<string, EnvVarRow[]>()
   for (const row of rows) {
-    const bucket = buckets.get(row.category)
+    const category = row.category || 'custom'
+    const bucket = buckets.get(category)
     if (bucket) bucket.push(row)
-    else buckets.set(row.category, [row])
+    else buckets.set(category, [row])
   }
   return [...buckets.entries()]
     .sort(([a], [b]) => {
@@ -130,7 +131,7 @@ export function groupByCategory(rows: EnvVarRow[]): EnvGroup[] {
     .map(([category, groupRows]) => ({
       category,
       label: categoryLabel(category),
-      rows: [...groupRows].sort((a, b) => a.name.localeCompare(b.name)),
+      rows: [...groupRows].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
       setCount: groupRows.filter((row) => row.isSet).length,
     }))
 }
