@@ -15,7 +15,10 @@ export interface OverviewSession {
   status?: string
   model?: string
   message_count?: number
-  updated_at?: string
+  messageCount?: number
+  updated_at?: string | number
+  updatedAt?: string | number
+  [key: string]: unknown
 }
 
 /** overview.js:352-365 — readiness status -> human label. Known tokens map
@@ -109,14 +112,35 @@ export function formatEventTs(now: Date): string {
   return now.toTimeString().slice(0, 8)
 }
 
-/** overview.js:274-281 — sort sessions by updated_at descending (missing ->
- *  epoch 0) and slice to the first 6. Never mutates the input. */
+/** Coerce updated_at / updatedAt to a millisecond timestamp, or 0 when absent/invalid. */
+function sessionUpdatedAtMs(s: OverviewSession): number {
+  const val = s.updated_at ?? s.updatedAt
+  if (val == null || val === '') return 0
+  if (typeof val === 'number') {
+    if (!Number.isFinite(val)) return 0
+    return Math.abs(val) < 10_000_000_000 ? val * 1000 : val
+  }
+  if (typeof val === 'string') {
+    const trimmed = val.trim()
+    if (!trimmed) return 0
+    const n = Number(trimmed)
+    if (Number.isFinite(n)) {
+      return Math.abs(n) < 10_000_000_000 ? n * 1000 : n
+    }
+    const d = new Date(trimmed).getTime()
+    return Number.isNaN(d) ? 0 : d
+  }
+  return 0
+}
+
+/** overview.js:274-281 — sort sessions by updated_at / updatedAt descending
+ *  (missing -> epoch 0) and slice to the first 6. Never mutates the input. */
 export function sortRecentSessions(sessions: OverviewSession[]): OverviewSession[] {
   return sessions
     .slice()
     .sort((a, b) => {
-      const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0
-      const tb = b.updated_at ? new Date(b.updated_at).getTime() : 0
+      const ta = sessionUpdatedAtMs(a)
+      const tb = sessionUpdatedAtMs(b)
       return tb - ta
     })
     .slice(0, 6)

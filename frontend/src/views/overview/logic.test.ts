@@ -156,6 +156,28 @@ describe('sortRecentSessions (overview.js:274-281)', () => {
     sortRecentSessions(input)
     expect(input.map((s) => s.key)).toEqual(snapshot)
   })
+  it('sorts numeric string and number timestamps correctly', () => {
+    const sessions = [
+      { key: 'a', updated_at: '1700000000000' },
+      { key: 'b', updated_at: 1700000002000 },
+      { key: 'c', updated_at: '1700000001000' },
+    ]
+    expect(sortRecentSessions(sessions).map((s) => s.key)).toEqual(['b', 'c', 'a'])
+  })
+  it('supports camelCase updatedAt when updated_at is missing', () => {
+    const sessions = [
+      { key: 'old', updatedAt: '2026-01-01T00:00:00Z' },
+      { key: 'new', updatedAt: '2026-01-05T00:00:00Z' },
+    ]
+    expect(sortRecentSessions(sessions).map((s) => s.key)).toEqual(['new', 'old'])
+  })
+  it('scales seconds epochs to milliseconds', () => {
+    const sessions = [
+      { key: 'a', updated_at: 1_700_000_000 },
+      { key: 'b', updated_at: 1_700_000_050 },
+    ]
+    expect(sortRecentSessions(sessions).map((s) => s.key)).toEqual(['b', 'a'])
+  })
 })
 
 describe('formatTokens (overview.js:263)', () => {
