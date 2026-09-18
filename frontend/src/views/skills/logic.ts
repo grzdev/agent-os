@@ -293,14 +293,16 @@ export function filterSkills(
   filterText: string,
   statusFilter: StatusFilter,
 ): RawSkill[] {
-  const q = (filterText || '').toLowerCase()
+  const q = (filterText || '').trim().toLowerCase()
   let out = skills
   if (q) {
     out = out.filter(
       (s) =>
         (s.name || '').toLowerCase().includes(q) ||
         (s.description || '').toLowerCase().includes(q) ||
-        (s.triggers || []).some((t) => t.toLowerCase().includes(q)),
+        (Array.isArray(s.triggers) ? s.triggers : []).some(
+          (t) => typeof t === 'string' && t.toLowerCase().includes(q),
+        ),
     )
   }
   if (statusFilter !== 'all') out = out.filter((s) => skillBucket(s) === statusFilter)

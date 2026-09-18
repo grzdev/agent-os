@@ -109,6 +109,24 @@ describe('filterSkills', () => {
     expect(filterSkills(list, 'a', 'ready').map((s) => s.name)).toEqual(['alpha', 'gamma'])
     expect(filterSkills(list, 'a', 'needs-setup').map((s) => s.name)).toEqual(['beta'])
   })
+
+  it('trims leading and trailing whitespace from query', () => {
+    expect(filterSkills(list, '  alpha  ', 'all').map((s) => s.name)).toEqual(['alpha'])
+    expect(filterSkills(list, '   ', 'all')).toHaveLength(3)
+  })
+
+  it('handles nullish fields and non-string triggers safely without crashing', () => {
+    const mixed = [
+      ...list,
+      skill({
+        name: 'unsafe',
+        description: undefined,
+        triggers: [null as unknown as string, 123 as unknown as string] as string[],
+      }),
+    ]
+    expect(() => filterSkills(mixed, 'safe', 'all')).not.toThrow()
+    expect(filterSkills(mixed, 'safe', 'all').map((s) => s.name)).toEqual(['unsafe'])
+  })
 })
 
 describe('installedEmptyMessage', () => {
