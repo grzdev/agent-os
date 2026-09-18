@@ -667,3 +667,32 @@ def test_create_xlsx_cli_reports_non_object_json_with_exit_code_2(
     assert create_xlsx.main() == 2
     assert "JSON spec must be an object" in capsys.readouterr().err
     assert not out.exists()
+
+
+def test_inspect_xlsx_cli_reports_corrupted_file_with_exit_code_2(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _, _, inspect_xlsx = _import_scripts()
+
+    corrupt = tmp_path / "corrupt.xlsx"
+    corrupt.write_bytes(b"not a valid zip or xlsx workbook")
+    monkeypatch.setattr(sys, "argv", ["inspect_xlsx.py", str(corrupt)])
+
+    assert inspect_xlsx.main() == 2
+    err = capsys.readouterr().err
+    assert "is not a valid .xlsx workbook" in err
+
+
+def test_inspect_xlsx_cli_reports_non_xlsx_format_with_exit_code_2(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _, _, inspect_xlsx = _import_scripts()
+
+    text_file = tmp_path / "notes.txt"
+    text_file.write_text("plain text", encoding="utf-8")
+    monkeypatch.setattr(sys, "argv", ["inspect_xlsx.py", str(text_file)])
+
+    assert inspect_xlsx.main() == 2
+    err = capsys.readouterr().err
+    assert "is not a valid .xlsx workbook" in err
+
