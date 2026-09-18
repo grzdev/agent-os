@@ -846,8 +846,11 @@ async def _handle_sessions_list(params: dict | None, ctx: RpcContext) -> dict:
             "spawnedBy": getattr(s, "spawned_by", None),
             "origin": getattr(s, "origin", None),
             "message_count": entry_count,
+            "messageCount": entry_count,
             "entry_count": entry_count,
+            "entryCount": entry_count,
             "size_bytes": None,
+            "sizeBytes": None,
         }
         row.update(_derive_source_metadata(s))
         task_rows = task_rows_by_session.get(canonicalize_session_key(s.session_key), [])

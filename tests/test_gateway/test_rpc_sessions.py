@@ -57,6 +57,7 @@ class FakeSession:
     origin: dict | None = None
     model: str | None = None
     model_override: str | None = None
+    project_id: str | None = None
 
 
 class FakeStorage:
@@ -640,6 +641,78 @@ class TestSessionsCreate:
         assert res.ok is True
 
 
+class TestSessionsGet:
+    @pytest.mark.asyncio
+    async def test_get_session_by_key_and_aliases(self, dispatcher):
+        session = FakeSession(
+            session_key="agent:main:test-get-1",
+            session_id="test-get-1",
+            agent_id="main",
+            status="running",
+            created_at=1000,
+            updated_at=2000,
+            display_name="Test Session",
+            derived_title="Test Session",
+            project_id="proj-123",
+            model="gpt-4o",
+        )
+        ctx = make_ctx(session_manager=FakeSessionManager([session]))
+
+        # 1. Using "key"
+        res = await dispatcher.dispatch("r1", "sessions.get", {"key": "agent:main:test-get-1"}, ctx)
+        assert res.ok is True
+        data = res.payload
+        assert data["key"] == "agent:main:test-get-1"
+        assert data["session_key"] == "agent:main:test-get-1"
+        assert data["sessionKey"] == "agent:main:test-get-1"
+        assert data["session_id"] == "test-get-1"
+        assert data["sessionId"] == "test-get-1"
+        assert data["status"] == "running"
+        assert data["agent_id"] == "main"
+        assert data["agentId"] == "main"
+        assert data["created_at"] == 1000
+        assert data["createdAt"] == 1000
+        assert data["updated_at"] == 2000
+        assert data["updatedAt"] == 2000
+        assert data["display_name"] == "Test Session"
+        assert data["displayName"] == "Test Session"
+        assert data["derived_title"] == "Test Session"
+        assert data["derivedTitle"] == "Test Session"
+        assert data["project_id"] == "proj-123"
+        assert data["projectId"] == "proj-123"
+        assert data["model"] == "gpt-4o"
+
+        # 2. Using "session_key" alias
+        res2 = await dispatcher.dispatch(
+            "r2", "sessions.get", {"session_key": "agent:main:test-get-1"}, ctx
+        )
+        assert res2.ok is True
+        assert res2.payload["key"] == "agent:main:test-get-1"
+
+        # 3. Using "sessionKey" alias
+        res3 = await dispatcher.dispatch(
+            "r3", "sessions.get", {"sessionKey": "agent:main:test-get-1"}, ctx
+        )
+        assert res3.ok is True
+        assert res3.payload["key"] == "agent:main:test-get-1"
+
+    @pytest.mark.asyncio
+    async def test_get_session_missing_key(self, dispatcher):
+        ctx = make_ctx(session_manager=FakeSessionManager([]))
+        res = await dispatcher.dispatch("r1", "sessions.get", {}, ctx)
+        assert res.ok is False
+        assert "params.key is required" in res.error.message
+
+    @pytest.mark.asyncio
+    async def test_get_session_not_found(self, dispatcher):
+        ctx = make_ctx(session_manager=FakeSessionManager([]))
+        res = await dispatcher.dispatch(
+            "r1", "sessions.get", {"key": "agent:main:nonexistent"}, ctx
+        )
+        assert res.ok is False
+        assert "Session not found" in res.error.message
+
+
 class TestSessionsList:
     @pytest.mark.asyncio
     async def test_list_includes_source_and_delivery_metadata(self, dispatcher):
@@ -665,6 +738,12 @@ class TestSessionsList:
         assert row["last_channel"] == "slack"
         assert row["last_to"] == "C123"
         assert row["delivery_context"] == {"channel_id": "C123"}
+        assert row["message_count"] == 0
+        assert row["messageCount"] == 0
+        assert row["entry_count"] == 0
+        assert row["entryCount"] == 0
+        assert row["size_bytes"] is None
+        assert row["sizeBytes"] is None
 
     @pytest.mark.asyncio
     async def test_list_exposes_persisted_active_task_without_runtime(self, dispatcher):
@@ -2148,9 +2227,7 @@ class TestSessionsDelete:
 
         ctx = make_ctx(session_manager=FakeSessionManager([session]), task_runtime=_BrokenRuntime())
 
-        res = await dispatcher.dispatch(
-            "r1", "sessions.delete", {"key": session.session_key}, ctx
-        )
+        res = await dispatcher.dispatch("r1", "sessions.delete", {"key": session.session_key}, ctx)
 
         assert res.ok is True
         assert res.payload["deleted"] == [session.session_key]

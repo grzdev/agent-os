@@ -29,6 +29,7 @@ from agentos.gateway.protocol import (
     make_ok_res,
 )
 from agentos.gateway.session_services import get_session_storage
+from agentos.session.keys import canonicalize_session_key
 
 # Handler type: (params, context) -> payload or raises
 RpcHandlerFn = Callable[[Any, "RpcContext"], Coroutine[Any, Any, Any]]
@@ -318,18 +319,37 @@ async def _sessions_get(params: Any, ctx: RpcContext) -> dict[str, Any]:
     storage = get_session_storage(ctx.session_manager)
     if storage is None:
         raise RpcUnavailableError("No session storage available")
-    if not isinstance(params, dict) or "key" not in params:
+    if not isinstance(params, dict):
         raise ValueError("params.key is required")
-    session = await storage.get_session(params["key"])
+    raw_key = params.get("key") or params.get("session_key") or params.get("sessionKey")
+    if not raw_key or not isinstance(raw_key, str):
+        raise ValueError("params.key is required")
+    key = canonicalize_session_key(raw_key)
+    session = await storage.get_session(key)
+    if session is None and key != raw_key:
+        session = await storage.get_session(raw_key)
     if session is None:
-        raise KeyError(f"Session not found: {params['key']}")
+        raise KeyError(f"Session not found: {raw_key}")
     return {
+        "key": session.session_key,
         "session_key": session.session_key,
+        "sessionKey": session.session_key,
         "session_id": session.session_id,
+        "sessionId": session.session_id,
         "status": session.status,
         "agent_id": session.agent_id,
+        "agentId": session.agent_id,
         "created_at": session.created_at,
+        "createdAt": session.created_at,
         "updated_at": session.updated_at,
+        "updatedAt": session.updated_at,
+        "display_name": getattr(session, "display_name", None),
+        "displayName": getattr(session, "display_name", None),
+        "derived_title": getattr(session, "derived_title", None),
+        "derivedTitle": getattr(session, "derived_title", None),
+        "project_id": getattr(session, "project_id", None),
+        "projectId": getattr(session, "project_id", None),
+        "model": getattr(session, "model", None),
     }
 
 
