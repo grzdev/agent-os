@@ -6,6 +6,7 @@ import {
   isAccessLocked,
   mergeChannels,
   needsAttention,
+  parseExpiryDate,
   senderLabel,
   senderMeta,
   sortChannels,
@@ -256,5 +257,38 @@ describe('senderMeta (channels.js:379-386)', () => {
     const meta = senderMeta({ sender_id: 7, expires_at: 1_700_000_000 })
     expect(meta).toContain('ID 7')
     expect(meta).toContain('expires ')
+  })
+  it('formats ISO date strings and camelCase expiresAt correctly', () => {
+    const isoMeta = senderMeta({ sender_id: 7, expires_at: '2026-09-18T12:00:00.000Z' })
+    expect(isoMeta).toContain('ID 7')
+    expect(isoMeta).toContain('expires ')
+
+    const camelMeta = senderMeta({ sender_id: 8, expiresAt: 1_700_000_000 })
+    expect(camelMeta).toContain('ID 8')
+    expect(camelMeta).toContain('expires ')
+  })
+  it('omits expiry bit on invalid date rather than outputting Invalid Date', () => {
+    const invalidMeta = senderMeta({ sender_id: 9, expires_at: 'not-a-valid-date' })
+    expect(invalidMeta).toBe('ID 9')
+    expect(invalidMeta).not.toContain('Invalid Date')
+  })
+})
+
+describe('parseExpiryDate', () => {
+  it('parses seconds epoch, millisecond epoch, and ISO string', () => {
+    const fromSec = parseExpiryDate(1_700_000_000)
+    expect(fromSec?.getTime()).toBe(1_700_000_000_000)
+
+    const fromMs = parseExpiryDate(1_700_000_000_000)
+    expect(fromMs?.getTime()).toBe(1_700_000_000_000)
+
+    const fromIso = parseExpiryDate('2026-09-18T12:00:00.000Z')
+    expect(fromIso?.getTime()).toBe(Date.parse('2026-09-18T12:00:00.000Z'))
+  })
+  it('returns null for null, undefined, empty, or invalid input', () => {
+    expect(parseExpiryDate(null)).toBeNull()
+    expect(parseExpiryDate(undefined)).toBeNull()
+    expect(parseExpiryDate('')).toBeNull()
+    expect(parseExpiryDate('invalid')).toBeNull()
   })
 })

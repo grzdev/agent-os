@@ -29,6 +29,7 @@ export interface AccessAccount {
   display_name?: string
   code?: string
   expires_at?: string | number
+  expiresAt?: string | number
   source?: string
   [key: string]: unknown
 }
@@ -209,17 +210,36 @@ export function senderLabel(item: AccessAccount): string {
   })
 }
 
+/** Safely parse an expiry timestamp (seconds epoch, millisecond epoch, or ISO string) to a Date. */
+export function parseExpiryDate(raw: unknown): Date | null {
+  if (raw == null || raw === '') return null
+  const num = typeof raw === 'number' ? raw : Number(raw)
+  if (Number.isFinite(num) && num > 0) {
+    const ms = num < 100_000_000_000 ? num * 1000 : num
+    const d = new Date(ms)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  if (typeof raw === 'string') {
+    const d = new Date(raw)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+  return null
+}
+
 /** channels.js:379-386 — the secondary meta line (bits joined with " · "). */
 export function senderMeta(item: AccessAccount): string {
   const bits: string[] = []
   if (item.display_name && item.display_name !== senderLabel(item)) bits.push(item.display_name)
   if (item.sender_id) bits.push(t('channels.senderMetaId', { id: item.sender_id }))
-  if (item.expires_at)
+  const expires = item.expires_at ?? item.expiresAt
+  const expDate = parseExpiryDate(expires)
+  if (expDate) {
     bits.push(
       t('channels.senderMetaExpires', {
-        time: new Date(Number(item.expires_at) * 1000).toLocaleTimeString(),
+        time: expDate.toLocaleTimeString(),
       }),
     )
+  }
   if (item.source) bits.push(item.source)
   return bits.join(' · ')
 }
