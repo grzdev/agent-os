@@ -21,7 +21,9 @@ export interface RawSession {
   status?: string
   model?: string
   message_count?: number
+  messageCount?: number
   updated_at?: string | number
+  updatedAt?: string | number
   size_bytes?: number | null
   agent_id?: string
   agentId?: string
@@ -275,6 +277,18 @@ export function filterSessions(sessions: RawSession[], query: string): RawSessio
 
 export type SortColumn = 'key' | 'updated_at' | 'message_count'
 
+/** Parse a session timestamp string (numeric or ISO-8601) or number to an epoch millisecond number. */
+export function parseSessionTimestamp(val: unknown): number {
+  if (typeof val === 'number') return Number.isFinite(val) ? val : 0
+  if (typeof val === 'string' && val.trim() !== '') {
+    const num = Number(val)
+    if (Number.isFinite(num) && num > 0) return num
+    const parsed = Date.parse(val)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
+}
+
 /** sessions.js:180-194 — sort a copy of the sessions by a column. message_count
  *  / updated_at compare numerically; other columns compare as lowercased
  *  strings. `asc` toggles direction. Never mutates the input. */
@@ -283,13 +297,15 @@ export function sortSessions(
   column: SortColumn,
   asc: boolean,
 ): RawSession[] {
-  const numeric = column === 'message_count' || column === 'updated_at'
   return [...sessions].sort((a, b) => {
     let va: number | string
     let vb: number | string
-    if (numeric) {
-      va = Number(a[column] ?? '') || 0
-      vb = Number(b[column] ?? '') || 0
+    if (column === 'updated_at') {
+      va = parseSessionTimestamp(a.updated_at ?? a.updatedAt)
+      vb = parseSessionTimestamp(b.updated_at ?? b.updatedAt)
+    } else if (column === 'message_count') {
+      va = Number(a.message_count ?? a.messageCount ?? 0) || 0
+      vb = Number(b.message_count ?? b.messageCount ?? 0) || 0
     } else {
       va = String(a[column] ?? '').toLowerCase()
       vb = String(b[column] ?? '').toLowerCase()
@@ -329,7 +345,10 @@ export function sessionStats(sessions: RawSession[]): SessionStats {
     return status === 'failed' || status === 'timeout'
   }).length
   const aborted = sessions.filter((s) => sessionVisualStatus(s) === 'killed').length
-  const totalMessages = sessions.reduce((acc, s) => acc + (Number(s.message_count) || 0), 0)
+  const totalMessages = sessions.reduce(
+    (acc, s) => acc + (Number(s.message_count ?? s.messageCount) || 0),
+    0,
+  )
   const agents = new Set<string>()
   sessions.forEach((s) => {
     const m = /^agent:([^:]+):/.exec(s.key || '')

@@ -5,6 +5,7 @@ import {
   buildDeleteParams,
   dotTone,
   parseBulkDeleteResult,
+  parseSessionTimestamp,
   parseSingleDeleteResult,
   relTimeLabel,
   filterSessions,
@@ -228,9 +229,28 @@ describe('sortSessions', () => {
     const desc = sortSessions(SESSIONS, 'updated_at', false).map((s) => s.updated_at)
     expect(desc).toEqual(['3', '2', '1'])
   })
-  it('sorts message_count numerically', () => {
+  it('sorts updated_at with ISO-8601 date strings and camelCase updatedAt', () => {
+    const isoRows: RawSession[] = [
+      { key: 'old', updated_at: '2026-01-01T00:00:00.000Z' },
+      { key: 'newest', updatedAt: '2026-09-18T12:00:00.000Z' },
+      { key: 'mid', updated_at: '2026-06-01T00:00:00.000Z' },
+    ]
+    const desc = sortSessions(isoRows, 'updated_at', false).map((s) => s.key)
+    expect(desc).toEqual(['newest', 'mid', 'old'])
+    const asc = sortSessions(isoRows, 'updated_at', true).map((s) => s.key)
+    expect(asc).toEqual(['old', 'mid', 'newest'])
+  })
+  it('sorts message_count numerically including camelCase messageCount', () => {
     const desc = sortSessions(SESSIONS, 'message_count', false).map((s) => s.message_count)
     expect(desc).toEqual([10, 3, 1])
+
+    const camelRows: RawSession[] = [
+      { key: 'k1', messageCount: 5 },
+      { key: 'k2', message_count: 20 },
+      { key: 'k3', messageCount: 1 },
+    ]
+    const asc = sortSessions(camelRows, 'message_count', true).map((s) => s.key)
+    expect(asc).toEqual(['k3', 'k1', 'k2'])
   })
   it('sorts key as a lowercased string', () => {
     const asc = sortSessions(SESSIONS, 'key', true).map((s) => s.key)
@@ -240,6 +260,19 @@ describe('sortSessions', () => {
     const copy = [...SESSIONS]
     sortSessions(SESSIONS, 'key', true)
     expect(SESSIONS).toEqual(copy)
+  })
+})
+
+describe('parseSessionTimestamp', () => {
+  it('parses numbers, numeric strings, and ISO-8601 strings', () => {
+    expect(parseSessionTimestamp(1726000000000)).toBe(1726000000000)
+    expect(parseSessionTimestamp('1726000000000')).toBe(1726000000000)
+    expect(parseSessionTimestamp('2026-09-18T00:00:00.000Z')).toBe(
+      Date.parse('2026-09-18T00:00:00.000Z'),
+    )
+    expect(parseSessionTimestamp(null)).toBe(0)
+    expect(parseSessionTimestamp(undefined)).toBe(0)
+    expect(parseSessionTimestamp('invalid-date')).toBe(0)
   })
 })
 
@@ -259,7 +292,7 @@ describe('sessionStats', () => {
         key: 'agent:x:chat:d',
         status: 'done',
         active_task: { status: 'queued' },
-        message_count: 4,
+        messageCount: 4,
       },
       { key: 'agent:x:chat:e', status: 'done', terminal_status: 'timeout' },
       { key: 'agent:x:chat:f', status: 'done', terminal_status: 'cancelled' },
