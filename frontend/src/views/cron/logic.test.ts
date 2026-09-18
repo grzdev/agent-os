@@ -173,6 +173,30 @@ describe('sortJobs', () => {
     expect(desc[desc.length - 1]!.name).toBe('gamma')
     expect(desc[0]!.name).toBe('beta')
   })
+  it('normalizes payloadKind, sessionTarget, expression across camel and snake_case', () => {
+    const mixed: RawJob[] = [
+      { name: 'j1', payload_kind: 'script', session_target: 'main', schedule: '0 1 * * *' },
+      { name: 'j2', payloadKind: 'agent_turn', sessionTarget: 'isolated', expression: '0 2 * * *' },
+      { name: 'j3', payloadKind: 'reminder', sessionTarget: 'current', expression: '0 0 * * *' },
+    ]
+    const byKind = sortJobs(mixed, 'payloadKind', true)
+    expect(byKind.map((j) => j.name)).toEqual(['j2', 'j3', 'j1'])
+
+    const byTarget = sortJobs(mixed, 'sessionTarget', true)
+    expect(byTarget.map((j) => j.name)).toEqual(['j3', 'j2', 'j1'])
+
+    const byExpr = sortJobs(mixed, 'expression', true)
+    expect(byExpr.map((j) => j.name)).toEqual(['j3', 'j1', 'j2'])
+  })
+  it('handles camelCase nextRun and invalid dates gracefully', () => {
+    const mixedDates: RawJob[] = [
+      { name: 'valid', nextRun: new Date(NOW + 2000).toISOString() },
+      { name: 'invalid', next_run: 'not-a-valid-date' },
+      { name: 'earliest', next_run: new Date(NOW + 1000).toISOString() },
+    ]
+    const asc = sortJobs(mixedDates, 'next_run', true)
+    expect(asc.map((j) => j.name)).toEqual(['earliest', 'valid', 'invalid'])
+  })
 })
 
 describe('filterJobs', () => {
@@ -185,16 +209,22 @@ describe('filterJobs', () => {
       sessionTarget: 'isolated',
       createdFrom: 'agent:main:telegram:health',
     },
+    {
+      name: 'Backup',
+      payload_kind: 'script',
+      session_target: 'main',
+    },
   ]
   it('returns a copy on empty query', () => {
     const out = filterJobs(jobs, '')
-    expect(out).toHaveLength(2)
+    expect(out).toHaveLength(3)
     expect(out).not.toBe(jobs)
   })
   it('matches name / message / prompt / kind / target / creator / expression', () => {
     expect(filterJobs(jobs, 'STANDUP').map((j) => j.name)).toEqual(['Daily standup'])
     expect(filterJobs(jobs, 'run health').map((j) => j.name)).toEqual(['Health check'])
     expect(filterJobs(jobs, 'agent_turn').map((j) => j.name)).toEqual(['Health check'])
+    expect(filterJobs(jobs, 'script').map((j) => j.name)).toEqual(['Backup'])
     expect(filterJobs(jobs, 'isolated').map((j) => j.name)).toEqual(['Health check'])
     expect(filterJobs(jobs, 'telegram:health').map((j) => j.name)).toEqual(['Health check'])
     expect(filterJobs(jobs, '1-5').map((j) => j.name)).toEqual(['Daily standup'])

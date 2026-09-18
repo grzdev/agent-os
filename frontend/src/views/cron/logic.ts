@@ -22,7 +22,9 @@ export interface RawJob {
   scheduleRaw?: string | number
   schedule_raw?: string | number
   next_run?: string | number | null
+  nextRun?: string | number | null
   last_run?: string | number | null
+  lastRun?: string | number | null
   last_status?: string
   payloadKind?: string
   payload_kind?: string
@@ -177,9 +179,10 @@ export function jobSchedule(job: RawJob): string {
  * currently running, and its next_run parses to a future timestamp.
  */
 export function isUpcomingRun(job: RawJob, now: number = Date.now()): boolean {
-  if (!job || !job.enabled || !job.next_run) return false
+  const next = job?.next_run ?? job?.nextRun
+  if (!job || !job.enabled || !next) return false
   if (job.status === 'running') return false
-  const ts = new Date(job.next_run as string | number)
+  const ts = new Date(next as string | number)
   return !Number.isNaN(ts.getTime()) && ts.getTime() > now
 }
 
@@ -192,7 +195,8 @@ export type CronDot = 'off' | 'error' | 'on'
 
 export function jobDotState(job: RawJob): CronDot {
   if (!job.enabled) return 'off'
-  const lastStatus = job.last_status || (job.last_run ? 'ok' : null)
+  const lastRun = job.last_run ?? job.lastRun
+  const lastStatus = job.last_status || (lastRun ? 'ok' : null)
   if (lastStatus === 'error' || lastStatus === 'fail') return 'error'
   return 'on'
 }
@@ -235,6 +239,17 @@ export function nextRunAbs(job: RawJob, now: number = Date.now()): string {
 export type SortCol =
   'name' | 'payloadKind' | 'sessionTarget' | 'expression' | 'last_run' | 'next_run'
 
+function parseCronDate(raw: unknown, asc: boolean): number {
+  if (raw == null || raw === '') return asc ? Infinity : -Infinity
+  const num = typeof raw === 'number' ? raw : Number(raw)
+  if (Number.isFinite(num) && num > 0) {
+    return num < 100_000_000_000 ? num * 1000 : num
+  }
+  const d = new Date(raw as string | number)
+  const t = d.getTime()
+  return Number.isFinite(t) ? t : asc ? Infinity : -Infinity
+}
+
 /**
  * cron.js:539-553 — non-mutating sort. Date columns (next_run/last_run) compare
  * numerically, pushing missing timestamps to the far end (Infinity asc /
@@ -243,17 +258,31 @@ export type SortCol =
  */
 export function sortJobs<T extends RawJob>(list: T[], col: string, asc: boolean): T[] {
   return [...list].sort((a, b) => {
-    let va: number | string = (a as Record<string, unknown>)[col] as number | string
-    let vb: number | string = (b as Record<string, unknown>)[col] as number | string
-    if (va == null) va = ''
-    if (vb == null) vb = ''
     if (col === 'next_run' || col === 'last_run') {
-      va = va ? new Date(va).getTime() : asc ? Infinity : -Infinity
-      vb = vb ? new Date(vb).getTime() : asc ? Infinity : -Infinity
-    } else {
-      va = String(va).toLowerCase()
-      vb = String(vb).toLowerCase()
+      const rawA = col === 'next_run' ? (a.next_run ?? a.nextRun) : (a.last_run ?? a.lastRun)
+      const rawB = col === 'next_run' ? (b.next_run ?? b.nextRun) : (b.last_run ?? b.lastRun)
+      const va = parseCronDate(rawA, asc)
+      const vb = parseCronDate(rawB, asc)
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0
+      return asc ? cmp : -cmp
     }
+    let rawA: unknown
+    let rawB: unknown
+    if (col === 'payloadKind') {
+      rawA = a.payloadKind || a.payload_kind || ''
+      rawB = b.payloadKind || b.payload_kind || ''
+    } else if (col === 'sessionTarget') {
+      rawA = a.sessionTarget || a.session_target || ''
+      rawB = b.sessionTarget || b.session_target || ''
+    } else if (col === 'expression') {
+      rawA = a.expression || a.schedule || ''
+      rawB = b.expression || b.schedule || ''
+    } else {
+      rawA = (a as Record<string, unknown>)[col] ?? ''
+      rawB = (b as Record<string, unknown>)[col] ?? ''
+    }
+    const va = String(rawA ?? '').toLowerCase()
+    const vb = String(rawB ?? '').toLowerCase()
     const cmp = va < vb ? -1 : va > vb ? 1 : 0
     return asc ? cmp : -cmp
   })
@@ -273,7 +302,7 @@ export function filterJobs<T extends RawJob>(list: T[], search: string): T[] {
     (j) =>
       (j.name || '').toLowerCase().includes(q) ||
       (j.message || j.prompt || '').toLowerCase().includes(q) ||
-      (j.payloadKind || '').toLowerCase().includes(q) ||
+      (j.payloadKind || j.payload_kind || '').toLowerCase().includes(q) ||
       String(j.sessionTarget || j.session_target || '')
         .toLowerCase()
         .includes(q) ||
