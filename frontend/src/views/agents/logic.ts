@@ -122,12 +122,13 @@ export function agentToForm(agent: RawAgent): AgentForm {
   }
 }
 
-/** agents.js:376 — parse the comma-separated tools input into a clean list. */
-export function parseToolsInput(value: string): string[] {
-  return String(value || '')
+/** agents.js:376 — parse the comma-separated tools input into a clean, deduplicated list. */
+export function parseToolsInput(value?: string | null): string[] {
+  const tokens = String(value || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
+  return [...new Set(tokens)]
 }
 
 /** The create-dialog fields. */

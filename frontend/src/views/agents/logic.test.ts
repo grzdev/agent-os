@@ -139,9 +139,14 @@ describe('parseToolsInput', () => {
   it('splits, trims and drops blanks', () => {
     expect(parseToolsInput(' a , b ,, c ')).toEqual(['a', 'b', 'c'])
   })
-  it('returns [] for blank input', () => {
+  it('deduplicates duplicate tool tokens', () => {
+    expect(parseToolsInput(' a , b , a , c , b ')).toEqual(['a', 'b', 'c'])
+  })
+  it('returns [] for blank or nullish input', () => {
     expect(parseToolsInput('')).toEqual([])
     expect(parseToolsInput('   ')).toEqual([])
+    expect(parseToolsInput(null)).toEqual([])
+    expect(parseToolsInput(undefined)).toEqual([])
   })
 })
 
