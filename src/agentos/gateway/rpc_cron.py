@@ -155,10 +155,11 @@ def _failure_destination_to_wire(fd: Any) -> dict[str, Any] | None:
     if isinstance(fd, dict):
         return {
             "mode": fd.get("mode", "none"),
-            "channelName": fd.get("channel_name", ""),
-            "channelId": fd.get("channel_id", ""),
-            "accountId": fd.get("account_id", ""),
-            "webhookUrl": fd.get("webhook_url", "") or "",
+            "channelName": fd.get("channel_name", fd.get("channelName", "")),
+            "channelId": fd.get("channel_id", fd.get("channelId", fd.get("to", ""))),
+            "accountId": fd.get("account_id", fd.get("accountId", "")),
+            "threadId": fd.get("thread_id", fd.get("threadId", "")),
+            "webhookUrl": fd.get("webhook_url", fd.get("webhookUrl", "")) or "",
         }
     mode = getattr(fd, "mode", None)
     mode_str = getattr(mode, "value", str(mode)) if mode is not None else "none"
@@ -167,6 +168,7 @@ def _failure_destination_to_wire(fd: Any) -> dict[str, Any] | None:
         "channelName": getattr(fd, "channel_name", ""),
         "channelId": getattr(fd, "channel_id", ""),
         "accountId": getattr(fd, "account_id", ""),
+        "threadId": getattr(fd, "thread_id", ""),
         "webhookUrl": getattr(fd, "webhook_url", "") or "",
     }
 
@@ -177,14 +179,14 @@ def _delivery_to_wire(delivery: Any) -> dict[str, Any]:
     if isinstance(delivery, dict):
         return {
             "mode": delivery.get("mode", "none"),
-            "channelName": delivery.get("channel_name", ""),
-            "channelId": delivery.get("channel_id", ""),
-            "accountId": delivery.get("account_id", ""),
-            "threadId": delivery.get("thread_id", ""),
-            "webhookUrl": delivery.get("webhook_url", "") or "",
-            "bestEffort": bool(delivery.get("best_effort", False)),
+            "channelName": delivery.get("channel_name", delivery.get("channelName", "")),
+            "channelId": delivery.get("channel_id", delivery.get("channelId", "")),
+            "accountId": delivery.get("account_id", delivery.get("accountId", "")),
+            "threadId": delivery.get("thread_id", delivery.get("threadId", "")),
+            "webhookUrl": delivery.get("webhook_url", delivery.get("webhookUrl", "")) or "",
+            "bestEffort": bool(delivery.get("best_effort", delivery.get("bestEffort", False))),
             "failureDestination": _failure_destination_to_wire(
-                delivery.get("failure_destination")
+                delivery.get("failure_destination", delivery.get("failureDestination"))
             ),
         }
     return {
@@ -435,10 +437,12 @@ def _build_failure_destination(raw: Any) -> FailureDestination | None:
         )
     return FailureDestination(
         mode=DeliveryMode.CHANNEL,
-        channel_name=str(raw.get("channelName") or raw.get("channel") or ""),
-        channel_id=str(raw.get("channelId") or raw.get("to") or ""),
-        account_id=str(raw.get("accountId") or ""),
-        thread_id=str(raw.get("threadId") or ""),
+        channel_name=str(
+            raw.get("channelName") or raw.get("channel_name") or raw.get("channel") or ""
+        ),
+        channel_id=str(raw.get("channelId") or raw.get("channel_id") or raw.get("to") or ""),
+        account_id=str(raw.get("accountId") or raw.get("account_id") or ""),
+        thread_id=str(raw.get("threadId") or raw.get("thread_id") or ""),
     )
 
 

@@ -14,6 +14,9 @@ import asyncio
 
 from agentos.gateway.rpc import RpcContext
 from agentos.gateway.rpc_cron import (
+    _build_failure_destination,
+    _delivery_to_wire,
+    _failure_destination_to_wire,
     _handle_cron_add,
     _handle_cron_update,
     _parse_delivery_overrides,
@@ -23,6 +26,7 @@ from agentos.scheduler.types import (
     CronJob,
     DeliveryConfig,
     DeliveryMode,
+    FailureDestination,
     SessionTarget,
 )
 
@@ -245,3 +249,67 @@ def test_add_keeps_best_effort_on_an_inferred_delivery() -> None:
     assert delivery.mode == DeliveryMode.ORIGIN
     assert delivery.channel_name == "telegram"
     assert delivery.best_effort is True
+
+
+def test_failure_destination_to_wire_serializes_thread_id() -> None:
+    fd = FailureDestination(
+        mode=DeliveryMode.CHANNEL,
+        channel_name="slack",
+        channel_id="C12345",
+        account_id="acc-1",
+        thread_id="thread-999",
+    )
+    wire = _failure_destination_to_wire(fd)
+    assert wire is not None
+    assert wire["threadId"] == "thread-999"
+    assert wire["channelName"] == "slack"
+    assert wire["channelId"] == "C12345"
+    assert wire["accountId"] == "acc-1"
+
+
+def test_failure_destination_to_wire_from_dict_with_thread_id() -> None:
+    raw_dict = {
+        "mode": "channel",
+        "channel_name": "telegram",
+        "channel_id": "123",
+        "thread_id": "topic-42",
+    }
+    wire = _failure_destination_to_wire(raw_dict)
+    assert wire is not None
+    assert wire["threadId"] == "topic-42"
+    assert wire["channelName"] == "telegram"
+    assert wire["channelId"] == "123"
+
+
+def test_build_failure_destination_accepts_thread_id_variants() -> None:
+    fd1 = _build_failure_destination(
+        {"mode": "channel", "channel": "slack", "to": "C1", "threadId": "t1"}
+    )
+    assert fd1 is not None
+    assert fd1.thread_id == "t1"
+
+    fd2 = _build_failure_destination(
+        {"mode": "channel", "channel": "slack", "to": "C1", "thread_id": "t2"}
+    )
+    assert fd2 is not None
+    assert fd2.thread_id == "t2"
+
+
+def test_delivery_to_wire_includes_failure_destination_thread_id() -> None:
+    delivery = DeliveryConfig(
+        mode=DeliveryMode.CHANNEL,
+        channel_name="slack",
+        channel_id="C1",
+        thread_id="main-thread",
+        failure_destination=FailureDestination(
+            mode=DeliveryMode.CHANNEL,
+            channel_name="discord",
+            channel_id="D1",
+            thread_id="fail-thread",
+        ),
+    )
+    wire = _delivery_to_wire(delivery)
+    assert wire["threadId"] == "main-thread"
+    assert wire["failureDestination"] is not None
+    assert wire["failureDestination"]["threadId"] == "fail-thread"
+
