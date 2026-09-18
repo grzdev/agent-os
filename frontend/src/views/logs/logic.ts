@@ -41,13 +41,26 @@ export function extractLines(data: unknown): unknown[] {
   return []
 }
 
+function canonicalLevel(val: unknown): Level {
+  const u = String(val ?? '')
+    .trim()
+    .toUpperCase()
+  if (u === 'WARN' || u === 'WARNING') return 'WARN'
+  if (u === 'ERROR' || u === 'ERR' || u === 'CRITICAL' || u === 'FATAL') return 'ERROR'
+  if (u === 'INFO' || u === 'INFORMATION') return 'INFO'
+  if (u === 'DEBUG') return 'DEBUG'
+  if (u === 'TRACE') return 'TRACE'
+  return 'INFO'
+}
+
 /** logs.js:189-200 — a raw tail entry (string or object) -> a LogLine. */
 export function normalizeEntry(entry: unknown): LogLine {
   if (typeof entry === 'string') {
     return { level: guessLevel(entry), message: entry, raw: entry }
   }
   const record = (entry ?? {}) as Record<string, unknown>
-  const level = String(record.level ?? record.lvl ?? 'INFO').toUpperCase() as Level
+  const rawLevel = record.level ?? record.lvl
+  const level = rawLevel != null ? canonicalLevel(rawLevel) : 'INFO'
   const message =
     typeof record.message === 'string'
       ? record.message
@@ -75,7 +88,14 @@ export function matchesFilter(
   search: string,
 ): boolean {
   if (!activeLevels.has(line.level)) return false
-  if (search && !line.message.toLowerCase().includes(search.toLowerCase())) return false
+  const s = (search || '').trim().toLowerCase()
+  if (
+    s &&
+    !String(line.message || '')
+      .toLowerCase()
+      .includes(s)
+  )
+    return false
   return true
 }
 
@@ -130,7 +150,8 @@ export interface HighlightSegment {
 /** logs.js:325-330 — split a message into text/match segments around a
  *  case-insensitive, regex-escaped search term (empty term -> one text seg). */
 export function splitHighlight(message: string, search: string): HighlightSegment[] {
-  if (!search) return [{ text: message, match: false }]
+  const msg = String(message || '')
+  if (!search) return [{ text: msg, match: false }]
   const term = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const re = new RegExp(`(${term})`, 'gi')
   const segments: HighlightSegment[] = []

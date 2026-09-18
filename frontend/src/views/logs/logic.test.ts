@@ -92,6 +92,13 @@ describe('normalizeEntry (logs.js:189-200)', () => {
   it('keeps a string raw verbatim', () => {
     expect(normalizeEntry({ message: 'm', raw: 'kept' }).raw).toBe('kept')
   })
+  it('maps level variants like warning, critical, fatal, and err', () => {
+    expect(normalizeEntry({ level: 'warning', message: 'disk warning' }).level).toBe('WARN')
+    expect(normalizeEntry({ level: 'critical', message: 'crash' }).level).toBe('ERROR')
+    expect(normalizeEntry({ level: 'fatal', message: 'abort' }).level).toBe('ERROR')
+    expect(normalizeEntry({ level: 'err', message: 'bad' }).level).toBe('ERROR')
+    expect(normalizeEntry({ level: 'information', message: 'hello' }).level).toBe('INFO')
+  })
   it('leaves ts undefined when absent', () => {
     expect(normalizeEntry({ message: 'm' }).ts).toBeUndefined()
   })
@@ -133,6 +140,15 @@ describe('matchesFilter / filterLines (logs.js:296-300,237)', () => {
   it('an empty search matches everything in the active levels', () => {
     const out = filterLines(lines, new Set(['INFO', 'WARN']), '')
     expect(out).toHaveLength(2)
+  })
+  it('safely handles non-string or missing message without throwing', () => {
+    const looseLine: LogLine = {
+      level: 'INFO',
+      message: undefined as unknown as string,
+      raw: '',
+    }
+    expect(() => matchesFilter(looseLine, new Set(['INFO']), 'test')).not.toThrow()
+    expect(matchesFilter(looseLine, new Set(['INFO']), 'test')).toBe(false)
   })
 })
 
