@@ -55,7 +55,7 @@ export function sortProjects(projects: RawProject[]): RawProject[] {
     const ua = Number(a.updated_at ?? a.updatedAt ?? 0) || 0
     const ub = Number(b.updated_at ?? b.updatedAt ?? 0) || 0
     if (ua !== ub) return ub - ua
-    return projectName(a).toLowerCase() < projectName(b).toLowerCase() ? -1 : 1
+    return projectName(a).localeCompare(projectName(b))
   })
 }
 
@@ -72,11 +72,24 @@ export function filterProjects(projects: RawProject[], query: string): RawProjec
   )
 }
 
+/** Resolve a session updated-at timestamp across snake_case and camelCase variants. */
+export function sessionUpdatedAt(s: RawSession): number {
+  const val = s.updated_at ?? s.updatedAt ?? 0
+  if (typeof val === 'number') return Number.isFinite(val) ? val : 0
+  if (typeof val === 'string' && val.trim() !== '') {
+    const num = Number(val)
+    if (Number.isFinite(num) && num > 0) return num
+    const parsed = Date.parse(val)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+  return 0
+}
+
 /** Sessions belonging to a given project, newest first. */
 export function sessionsInProject(sessions: RawSession[], id: string): RawSession[] {
   return sessions
     .filter((s) => sessionProjectId(s) === id)
-    .sort((a, b) => (Number(b.updated_at ?? 0) || 0) - (Number(a.updated_at ?? 0) || 0))
+    .sort((a, b) => sessionUpdatedAt(b) - sessionUpdatedAt(a))
 }
 
 /** Group a project's sessions by their agent id (alphabetical), each bucket
@@ -95,9 +108,7 @@ export function groupProjectSessionsByAgent(
   return [...buckets.entries()]
     .map(([agentId, items]) => ({
       agentId,
-      items: [...items].sort(
-        (a, b) => (Number(b.updated_at ?? 0) || 0) - (Number(a.updated_at ?? 0) || 0),
-      ),
+      items: [...items].sort((a, b) => sessionUpdatedAt(b) - sessionUpdatedAt(a)),
     }))
     .sort((a, b) => a.agentId.localeCompare(b.agentId))
 }

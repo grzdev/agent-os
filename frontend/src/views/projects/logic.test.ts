@@ -9,6 +9,7 @@ import {
   projectSessionCount,
   sessionProjectId,
   sessionsInProject,
+  sessionUpdatedAt,
   sortProjects,
 } from './logic'
 
@@ -30,6 +31,16 @@ describe('project row accessors', () => {
     expect(sessionProjectId({ project_id: null })).toBe('')
     expect(sessionProjectId({})).toBe('')
   })
+
+  it('resolves sessionUpdatedAt across casings and formats', () => {
+    expect(sessionUpdatedAt({ updated_at: 100 })).toBe(100)
+    expect(sessionUpdatedAt({ updatedAt: 200 })).toBe(200)
+    expect(sessionUpdatedAt({ updatedAt: '300' })).toBe(300)
+    expect(sessionUpdatedAt({ updated_at: '2026-09-18T12:00:00.000Z' })).toBe(
+      Date.parse('2026-09-18T12:00:00.000Z'),
+    )
+    expect(sessionUpdatedAt({})).toBe(0)
+  })
 })
 
 describe('sortProjects', () => {
@@ -42,6 +53,15 @@ describe('sortProjects', () => {
     const sorted = sortProjects(input)
     expect(sorted.map((p) => p.name)).toEqual(['Newest', 'Alpha', 'Beta'])
     expect(input[0]!.name).toBe('Beta')
+  })
+
+  it('handles identical names and timestamps stably without weak ordering violation', () => {
+    const input = [
+      { project_id: '1', name: 'Same', updated_at: 100 },
+      { project_id: '2', name: 'Same', updatedAt: 100 },
+    ]
+    const sorted = sortProjects(input)
+    expect(sorted).toHaveLength(2)
   })
 })
 
@@ -60,12 +80,12 @@ describe('filterProjects', () => {
 describe('sessionsInProject / filterSessionsByProject', () => {
   const sessions = [
     { key: 'k1', project_id: 'p1', updated_at: 100 },
-    { key: 'k2', project_id: 'p1', updated_at: 300 },
+    { key: 'k2', project_id: 'p1', updatedAt: 300 },
     { key: 'k3', projectId: 'p2', updated_at: 200 },
     { key: 'k4', updated_at: 400 },
   ]
 
-  it('lists a project sessions newest first', () => {
+  it('lists a project sessions newest first across snake and camelCase timestamps', () => {
     expect(sessionsInProject(sessions, 'p1').map((s) => s.key)).toEqual(['k2', 'k1'])
   })
 
@@ -77,11 +97,11 @@ describe('sessionsInProject / filterSessionsByProject', () => {
 })
 
 describe('groupProjectSessionsByAgent', () => {
-  it('buckets by agent alphabetically, each bucket newest first', () => {
+  it('buckets by agent alphabetically, each bucket newest first including camelCase updatedAt', () => {
     const sessions = [
       { key: 'k1', agent_id: 'zeta', updated_at: 100 },
-      { key: 'k2', agentId: 'alpha', updated_at: 100 },
-      { key: 'k3', agent_id: 'alpha', updated_at: 300 },
+      { key: 'k2', agentId: 'alpha', updatedAt: 100 },
+      { key: 'k3', agent_id: 'alpha', updatedAt: 300 },
       { key: 'k4', updated_at: 50 },
     ]
     const groups = groupProjectSessionsByAgent(sessions)

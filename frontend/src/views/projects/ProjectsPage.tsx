@@ -612,7 +612,12 @@ export function ProjectsPage() {
                                   <span>{sessionName(s) || key}</span>
                                 </button>
                                 <span className="proj-dim t-data">
-                                  {s.updated_at != null ? relTimeLabel(s.updated_at) : ''}
+                                  {(s.updated_at ?? (s.updatedAt as string | number | undefined)) !=
+                                  null
+                                    ? relTimeLabel(
+                                        (s.updated_at ?? (s.updatedAt as string | number))!,
+                                      )
+                                    : ''}
                                 </span>
                               </li>
                             )
