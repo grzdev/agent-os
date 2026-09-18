@@ -92,7 +92,12 @@ function numericRowVal(row: Record<string, unknown>, ...keys: string[]): number 
   const value = rowVal(row, ...keys)
   if (value == null || value === '') return null
   const n = Number(value)
-  return Number.isFinite(n) ? n : null
+  if (Number.isFinite(n)) return n
+  if (typeof value === 'string') {
+    const parsed = Date.parse(value.trim())
+    if (!Number.isNaN(parsed)) return parsed
+  }
+  return null
 }
 
 /** Coerce a candidate row value to a number, treating null/'' as 0. */
@@ -101,7 +106,7 @@ function num(row: Record<string, unknown>, ...keys: string[]): number {
 }
 
 /** usage.js:208-214 — first numeric timestamp across ended/updated/started/
- *  created (snake + camel), else null. */
+ *  created (snake + camel), else null. Converts unix epoch seconds to millis. */
 export function sessionTimestamp(row: UsageRow): number | null {
   for (const key of [
     'endedAt',
@@ -114,7 +119,12 @@ export function sessionTimestamp(row: UsageRow): number | null {
     'created_at',
   ]) {
     const value = numericRowVal(row as Record<string, unknown>, key)
-    if (value != null) return value
+    if (value != null) {
+      if (value >= 100_000_000 && value < 10_000_000_000) {
+        return value * 1000
+      }
+      return value
+    }
   }
   return null
 }

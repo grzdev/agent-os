@@ -101,6 +101,19 @@ describe('sessionTimestamp', () => {
     expect(sessionTimestamp({ updated_at: '' })).toBeNull()
     expect(sessionTimestamp({ updated_at: 'nope' })).toBeNull()
   })
+  it('parses ISO date strings into ms epochs', () => {
+    const iso = '2026-09-18T10:00:00.000Z'
+    expect(sessionTimestamp({ updatedAt: iso })).toBe(Date.parse(iso))
+    expect(sessionTimestamp({ updated_at: iso })).toBe(Date.parse(iso))
+  })
+  it('scales unix epoch seconds to millis', () => {
+    expect(sessionTimestamp({ updated_at: 1_726_000_000 })).toBe(1_726_000_000_000)
+    expect(sessionTimestamp({ updatedAt: '1726000000' })).toBe(1_726_000_000_000)
+  })
+  it('passes millisecond epochs through unchanged', () => {
+    expect(sessionTimestamp({ updated_at: 1_726_000_000_000 })).toBe(1_726_000_000_000)
+    expect(sessionTimestamp({ updatedAt: '1726000000000' })).toBe(1_726_000_000_000)
+  })
 })
 
 describe('rangeCutoffMs / visibleSessions / undatedHiddenCount', () => {
@@ -131,6 +144,14 @@ describe('rangeCutoffMs / visibleSessions / undatedHiddenCount', () => {
   })
   it('7d keeps only rows dated within window (undated dropped)', () => {
     expect(visibleSessions(makeRows(), '7').map((r) => r.session)).toEqual(['recent'])
+  })
+  it('visibleSessions keeps rows with ISO timestamps or seconds epochs within range', () => {
+    const rows: UsageRow[] = [
+      { session: 'iso-recent', updated_at: new Date(Date.now() - 86_400_000).toISOString() },
+      { session: 'sec-recent', updated_at: Math.floor((Date.now() - 86_400_000) / 1000) },
+      { session: 'iso-old', updated_at: new Date(Date.now() - 20 * 86_400_000).toISOString() },
+    ]
+    expect(visibleSessions(rows, '7').map((r) => r.session)).toEqual(['iso-recent', 'sec-recent'])
   })
   it('undatedHiddenCount is 0 on all, counts undated otherwise', () => {
     expect(undatedHiddenCount(makeRows(), 'all')).toBe(0)
